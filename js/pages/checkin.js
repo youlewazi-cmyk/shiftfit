@@ -28,8 +28,6 @@ export async function renderCheckin() { try {
     await renderSelectorMode();
     await renderTodaySummary();
   }
-}
-
 } catch(e) { document.getElementById('checkin-form').innerHTML = '<div class="card" style="color:var(--danger);padding:20px;text-align:center">加载失败：' + e.message + '<br><button class="btn btn-primary btn-sm" onclick="location.reload()" style="margin-top:12px">重试</button></div>'; }
 
 /* ---- Selector Mode */
