@@ -6,7 +6,7 @@ import { renderDiet } from './pages/diet.js';
 import { renderHistory } from './pages/history.js';
 import { renderSettings } from './pages/settings.js';
 import { seedDefaultExercises } from './db.js';
-import { checkReminders } from './utils.js?v=20260622a';
+import { checkReminders } from './utils.js?v=20260622b';
 
 const renderers = { home: renderHome, checkin: renderCheckin, diet: renderDiet, history: renderHistory, settings: renderSettings };
 

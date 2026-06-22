@@ -1,4 +1,4 @@
-import { DIET_TARGETS, showToast, today } from '../utils.js?v=20260622a';
+import { DIET_TARGETS, showToast, today } from '../utils.js?v=20260622b';
 import { getDietByDate, saveDietRecord, getDietCounters, saveDietCounters } from '../db.js';
 
 export async function renderDiet() {
