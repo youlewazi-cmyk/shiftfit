@@ -1,4 +1,4 @@
-export function today() {
+﻿export function today() {
   return formatDate(new Date());
 }
 
@@ -259,6 +259,7 @@ export async function checkReminders() {
       _lastReminders['training_' + today()] = true;
       new Notification('ShiftFit', { body: `今天是${info.shiftName}，${info.canTrain === 'main' ? '全力训练！' : '可以训练'}`, icon: '/assets/icons/icon-192.png' });
     }
+  }
   }
 
   // Diet reminders
