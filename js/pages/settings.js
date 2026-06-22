@@ -1,6 +1,6 @@
-import { showToast, today } from '../utils.js';
+import { showToast, today } from '../utils.js?v=20260622a';
 import { getShiftConfig, saveShiftConfig, getShiftCycle, saveShiftCycle, getSetting, setSetting, getReminderConfig, saveReminderConfig, getPlanConfig, savePlanConfig, getAllExercises, getWeightRecords, db } from '../db.js';
-import { PPL_DAYS, BODY_CATEGORIES } from '../utils.js';
+import { PPL_DAYS, BODY_CATEGORIES } from '../utils.js?v=20260622a';
 
 export async function renderSettings() {
   const shiftCfg = await getShiftConfig();

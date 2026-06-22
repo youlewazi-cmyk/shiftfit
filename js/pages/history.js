@@ -1,4 +1,4 @@
-import { today, formatDate, parseDate, addDays, BODY_CATEGORIES, calcSetVolume, calcMaxWeightInSets, showToast } from '../utils.js';
+import { today, formatDate, parseDate, addDays, BODY_CATEGORIES, calcSetVolume, calcMaxWeightInSets, showToast } from '../utils.js?v=20260622a';
 import { getWorkoutDatesInRange, getTodayWorkoutExercises as getWEByDate, getExerciseHistory, getPRMaxWeight, deleteWorkout } from '../db.js';
 
 let calYear, calMonth, selectedDate;

@@ -1,4 +1,4 @@
-import { today, getWeekRange, getMonthRange, DEFAULT_EXERCISES, DEFAULT_PPL_PLAN } from './utils.js';
+import { today, getWeekRange, getMonthRange, DEFAULT_EXERCISES, DEFAULT_PPL_PLAN } from './utils.js?v=20260622a';
 
 const db = new Dexie('FitnessTracker');
 

@@ -1,4 +1,4 @@
-import { today, getGreeting, getDateText, calcStreak, calcSetVolume, getShiftInfo, getTomorrowInfo, getPlanForShift, DIET_TARGETS, showToast } from '../utils.js';
+import { today, getGreeting, getDateText, calcStreak, calcSetVolume, getShiftInfo, getTomorrowInfo, getPlanForShift, DIET_TARGETS, showToast } from '../utils.js?v=20260622a';
 import { getTodayWorkoutExercises, getLatestWeight, getMonthStats, getTotalStats, setWeight, getShiftConfig, getSetting, getDietByDate, getWeightTrend, getRecoveryRecord, saveRecoveryRecord } from '../db.js';
 import db from '../db.js';
 import { navigate } from '../router.js';

@@ -1,4 +1,4 @@
-import { showToast, BODY_CATEGORIES, checkPRBreak, calcSetVolume, calcMaxWeightInSets, today } from '../utils.js';
+import { showToast, BODY_CATEGORIES, checkPRBreak, calcSetVolume, calcMaxWeightInSets, today } from '../utils.js?v=20260622a';
 import { addWorkoutWithExercises, getTodayWorkoutExercises, getAllExercises, getExerciseHistory, getPRMaxWeight } from '../db.js';
 
 let state = null;
