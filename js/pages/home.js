@@ -85,7 +85,36 @@ async function renderBlocks() {
   } else if (plan) {
     html += '<div style="font-size:var(--font-lg);font-weight:700;margin:8px 0">' + plan.icon + ' ' + plan.name + '</div>';
     html += '<div style="font-size:var(--font-sm);color:var(--text-secondary);margin-bottom:10px">' + plan.exercises.length + '个动作 · 预计75分钟</div>';
-    html += '<button class="btn btn-primary btn-block btn-sm" id="btn-start-plan">开始训练</button>';
+    html += '<div style="margin:12px 0">';
+
+plan.exercises.slice(0,5).forEach(function(ex){
+
+html += `
+<div style="
+display:flex;
+justify-content:space-between;
+padding:8px 0;
+border-bottom:1px solid rgba(255,255,255,.05)
+">
+
+<span>${ex.name}</span>
+
+<span style="
+color:var(--text-secondary);
+font-size:var(--font-sm)
+">
+
+${ex.sets}组 × ${ex.reps}
+
+</span>
+
+</div>
+
+`;
+
+});
+
+html += '</div>';html += '<button class="btn btn-primary btn-block btn-sm" id="btn-start-plan">开始训练</button>';
   }
   html += '</div>';
 
