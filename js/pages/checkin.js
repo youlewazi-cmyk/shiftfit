@@ -1,4 +1,4 @@
-import { showToast, BODY_CATEGORIES, checkPRBreak, calcSetVolume, calcMaxWeightInSets, today } from '../utils.js';
+import { showToast, BODY_CATEGORIES, checkPRBreak, calcSetVolume, calcMaxWeightInSets, today } from '../utils.js?v=20260622b';
 import { addWorkoutWithExercises, getTodayWorkoutExercises, getAllExercises, getExerciseHistory, getPRMaxWeight } from '../db.js';
 
 let state = null;
@@ -11,15 +11,67 @@ export async function renderCheckin() { try {
     const exercises = JSON.parse(preset);
     const allEx = await getAllExercises();
     const resolved = exercises.map(e => {
-      const name = typeof e === 'string' ? e : e.name;
+     const name =
+typeof e === 'string'
+? e
+: (
+e.name ||
+e.exercise ||
+e.exerciseName ||
+''
+);
       const found = allEx.find(a => a.name === name);
       return {
         exerciseId: found ? found.id : null,
         exerciseName: name,
         category: found ? found.category : 'other',
-        targetSets: typeof e === 'object' ? e.sets : 4,
-        targetReps: typeof e === 'object' ? e.reps : 8,
-        targetWeight: typeof e === 'object' ? (e.weight || 0) : 0
+        targetSets:
+
+typeof e === 'object'
+
+? (
+
+e.targetSets ||
+
+e.sets ||
+
+4
+
+)
+
+:4,
+
+targetReps:
+
+typeof e === 'object'
+
+? (
+
+e.targetReps ||
+
+e.reps ||
+
+8
+
+)
+
+:8,
+
+targetWeight:
+
+typeof e === 'object'
+
+? (
+
+e.targetWeight ||
+
+e.weight ||
+
+0
+
+)
+
+:0
       };
     });
     startWorkoutSession(resolved);
@@ -28,9 +80,8 @@ export async function renderCheckin() { try {
     await renderSelectorMode();
     await renderTodaySummary();
   }
-}
-
 } catch(e) { document.getElementById('checkin-form').innerHTML = '<div class="card" style="color:var(--danger);padding:20px;text-align:center">加载失败：' + e.message + '<br><button class="btn btn-primary btn-sm" onclick="location.reload()" style="margin-top:12px">重试</button></div>'; }
+}
 
 /* ---- Selector Mode */
 async function renderSelectorMode() {
