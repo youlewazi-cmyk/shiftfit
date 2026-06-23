@@ -83,10 +83,10 @@ export async function calcStreak(db) {
 }
 
 export const TYPE_MAP = {
-  strength: { name: '力量', icon: '🏋️' },
-  cardio: { name: '有氧', icon: '🏃' },
-  stretch: { name: '拉伸', icon: '🧘' },
-  other: { name: '其他', icon: '💪' }
+  strength: { name: '力量', icon: '' },
+  cardio: { name: '有氧', icon: '' },
+  stretch: { name: '拉伸', icon: '' },
+  other: { name: '其他', icon: '' }
 };
 
 export const INTENSITY_MAP = {
@@ -103,11 +103,11 @@ export function showToast(msg) {
   el._timeout = setTimeout(() => el.classList.add('hidden'), 1800);
 }
 export const BODY_CATEGORIES = {
-  chest: { name: '胸', icon: '🎯', color: '#ff6b6b' },
-  back: { name: '背', icon: '🔙', color: '#4ecdc4' },
-  legs: { name: '腿', icon: '🦿', color: '#45b7d1' },
-  shoulders: { name: '肩', icon: '🏔️', color: '#96ceb4' },
-  arms: { name: '手臂', icon: '💪', color: '#ffeaa7' }
+  chest: { name: '胸', icon: '', color: '#ff6b6b' },
+  back: { name: '背', icon: '', color: '#4ecdc4' },
+  legs: { name: '腿', icon: '', color: '#45b7d1' },
+  shoulders: { name: '肩', icon: '', color: '#96ceb4' },
+  arms: { name: '手臂', icon: '', color: '#ffeaa7' }
 };
 
 export const DEFAULT_EXERCISES = [
@@ -140,11 +140,11 @@ export const DEFAULT_EXERCISES = [
 
 /* ---- PPL 训练计划 ---- */
 
-export const PPL_DAYS = { push: { name: '推日', icon: '🏋️', desc: '胸·肩·三头' },
-  pull: { name: '拉日', icon: '🔙', desc: '背·二头·后束' },
-  legs: { name: '腿日', icon: '🦿', desc: '股四·腘绳·臀' },
-  upper: { name: '上肢日', icon: '💪', desc: '胸·背·肩·臂' },
-  rest: { name: '恢复日', icon: '💤', desc: '睡眠·拉伸·散步' } };
+export const PPL_DAYS = { push: { name: '推日', icon: '', desc: '胸肩三头' },
+  pull: { name: '拉日', icon: '', desc: '背二头后束' },
+  legs: { name: '腿日', icon: '', desc: '股四腘绳臀' },
+  upper: { name: '上肢日', icon: '', desc: '胸背肩臂' },
+  rest: { name: '恢复日', icon: '', desc: '睡眠拉伸散步' } };
 
 export const DEFAULT_PPL_PLAN = {
   push: [
@@ -226,9 +226,9 @@ export async function getPlanForShift(shiftInfo) {
 export const DIET_TARGETS = { protein: 110, calories: 2800, milk: 500, eggs: 3, chicken: 200 };
 
 export const FOOD_ITEMS = {
-  milk: { name: '牛奶(ml)', target: 500, icon: '🥛' },
-  eggs: { name: '鸡蛋(个)', target: 3, icon: '🥚' },
-  chicken: { name: '鸡胸肉(g)', target: 200, icon: '🍗' }
+  milk: { name: '牛奶(ml)', target: 500, icon: '' },
+  eggs: { name: '鸡蛋(个)', target: 3, icon: '' },
+  chicken: { name: '鸡胸肉(g)', target: 200, icon: '' }
 };
 
 /* ---- 检查提醒 ---- */
