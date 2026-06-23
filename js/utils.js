@@ -255,11 +255,9 @@ export async function checkReminders() {
     const shiftCfg = await getShiftConfig();
     const info = await getShiftInfo(shiftCfg);
     if (info.plan !== 'rest') {
-    if (info.canTrain !== 'rest') {
       _lastReminders['training_' + today()] = true;
-      new Notification('ShiftFit', { body: `今天是${info.shiftName}，${info.canTrain === 'main' ? '全力训练！' : '可以训练'}`, icon: '/assets/icons/icon-192.png' });
+      new Notification('ShiftFit', { body: `今天是${info.shiftName}，训练日！`, icon: '/assets/icons/icon-192.png' });
     }
-  }
 
   // Diet reminders
   if (cfg.enabled.diet && cfg.dietTimes) {

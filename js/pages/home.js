@@ -1,5 +1,5 @@
 import { today, getGreeting, getDateText, calcStreak, calcSetVolume, getShiftInfo, getTomorrowInfo, getPlanForShift, DIET_TARGETS, showToast } from '../utils.js';
-import { getTodayWorkoutExercises, getLatestWeight, getMonthStats, getTotalStats, setWeight, getShiftConfig, getSetting, getDietByDate, getWeightTrend, getRecoveryRecord, saveRecoveryRecord } from '../db.js';
+import { getTodayWorkoutExercises, getLatestWeight, getMonthStats, getTotalStats, setWeight, getShiftConfig, getSetting, getDietByDate, getWeightTrend, getRecoveryRecord, saveRecoveryRecord, getDietCounters } from '../db.js';
 import db from '../db.js';
 import { navigate } from '../router.js';
 
@@ -42,6 +42,20 @@ async function renderBlocks() {
   var pPct = Math.min(100, Math.round((protein / DIET_TARGETS.protein) * 100));
   var cPct = Math.min(100, Math.round((calories / DIET_TARGETS.calories) * 100));
 
+  // Diet counters for unfinished items
+  var counters = await getDietCounters();
+  var unfinishedDiet = [];
+  var counterDefs = [
+    { key: 'milk', name: '牛奶', unit: 'ml', target: 500, icon: '🥛' },
+    { key: 'eggs', name: '鸡蛋', unit: '个', target: 3, icon: '🥚' },
+    { key: 'chicken', name: '鸡胸肉', unit: 'g', target: 200, icon: '🍡' },
+    { key: 'water', name: '饮水', unit: 'L', target: 3, icon: '🥧' }
+  ];
+  counterDefs.forEach(function(c) {
+    var val = counters[c.key] || 0;
+    if (val < c.target) unfinishedDiet.push({ icon: c.icon, name: c.name, current: val, target: c.target, unit: c.unit });
+  });
+
   // Estimated completion date
   var estDate = '';
   if (trend7 > 0 && toGo > 0) {
@@ -64,73 +78,178 @@ async function renderBlocks() {
   var color = colorMap[info.plan] || 'var(--accent)';
   var labelMap = { rest: '恢复日', push: '训练日', pull: '训练日', legs: '训练日', upper: '训练日' };
   var label = labelMap[info.plan] || '训练日';
-  var emojiMap = { rest: '💤', push: '🏋️', pull: '🔙', legs: '🦿', upper: '💪' };
-  var emoji = emojiMap[info.plan] || '🏋️';
+  var emojiMap = { rest: '🌙', push: '🏸️', pull: '🔊', legs: '🞋', upper: '💭' };
+  var emoji = emojiMap[info.plan] || '🏸️';
+  var typeNameMap = { push: 'Push（推日）', pull: 'Pull（拉日）', legs: 'Legs（腿日）', upper: 'Upper（上肢日）' };
 
   var recData = recovery ? (recovery.foodItems || {}) : {};
 
+  // Check today's training completion
+  var todayExercises = await getTodayWorkoutExercises();
+  var hasTrainedToday = todayExercises.length > 0;
+  var completedExercises = 0;
+  var totalPlannedExercises = plan ? plan.exercises.length : 0;
+  if (hasTrainedToday && plan) {
+    var trainedNames = new Set(todayExercises.map(function(we) { return we.exerciseName; }));
+    plan.exercises.forEach(function(ex) { if (trainedNames.has(ex.name)) completedExercises++; });
+  }
+
   var html = '';
 
-  // Block 1: Today Status
-  html += '<div class="card" style="margin-bottom:16px;border-left:3px solid ' + color + '">';
-  html += '<div class="card-header"><span class="card-title">' + emoji + ' ' + label + '</span><span style="font-size:var(--font-xs);color:var(--text-secondary)">班次：' + info.shiftName + '</span></div>';
+  // ═══════════════════════════════════════
+  // Module 1: 今日任务
+  // ═══════════════════════════════════════
+  html += '<div class="card task-module" style="margin-bottom:14px;border-left:3px solid ' + color + '">';
+  html += '<div class="card-header"><span class="card-title">📋 今日任务</span><span class="task-shift-badge">' + info.shiftName + '</span></div>';
+
   if (isRest) {
-    html += '<div style="padding:8px 0;display:flex;flex-direction:column;gap:6px">';
-    html += '<div style="color:var(--text-tertiary);font-size:var(--font-sm)">' + (info.shiftName === '值班24h' ? '值班24小时，恢复优先' : info.shiftName === '夜班B' ? '凌晨3点开始工作，优先保证恢复' : '今天是恢复日') + '</div>';
-    html += '<label class="diet-check"><input type="checkbox" id="rec-sleep"' + (recData.sleep ? ' checked' : '') + '> 保证睡眠</label>';
-    html += '<label class="diet-check"><input type="checkbox" id="rec-stretch"' + (recData.stretch ? ' checked' : '') + '> 拉伸10分钟</label>';
-    html += '<label class="diet-check"><input type="checkbox" id="rec-walk"' + (recData.walk ? ' checked' : '') + '> 散步20分钟</label>';
-    html += '<button class="btn btn-primary btn-sm" id="save-recovery" style="margin-top:4px">保存</button>';
+    // Recovery day
+    html += '<div style="padding:4px 0;display:flex;flex-direction:column;gap:4px">';
+    html += '<div style="color:var(--text-tertiary);font-size:var(--font-sm);margin-bottom:4px">🌙 恢复日 — 优先保证恢复</div>';
+    html += '<label class="diet-check"><input type="checkbox" id="rec-sleep"' + (recData.sleep ? ' checked' : '') + '> 😴 保证睡眠 7-8h</label>';
+    html += '<label class="diet-check"><input type="checkbox" id="rec-stretch"' + (recData.stretch ? ' checked' : '') + '> 🧘 拉伸 10 分钟</label>';
+    html += '<label class="diet-check"><input type="checkbox" id="rec-walk"' + (recData.walk ? ' checked' : '') + '> 🚶 散步 20 分钟</label>';
+    html += '<label class="diet-check"><input type="checkbox" id="rec-water"' + (recData.water ? ' checked' : '') + '> 💧 饮水 3L</label>';
+    html += '<button class="btn btn-primary btn-sm" id="save-recovery" style="margin-top:6px">保存</button>';
     html += '</div>';
   } else if (plan) {
-    html += '<div style="font-size:var(--font-lg);font-weight:700;margin:8px 0">' + plan.icon + ' ' + plan.name + '</div>';
-    html += '<div style="font-size:var(--font-sm);color:var(--text-secondary);margin-bottom:10px">' + plan.exercises.length + '个动作 · 预计75分钟</div>';
-    html += '<button class="btn btn-primary btn-block btn-sm" id="btn-start-plan">开始训练</button>';
+    // Training day
+    html += '<div style="display:flex;align-items:center;gap:10px;margin:6px 0">';
+    html += '<span style="font-size:28px">' + plan.icon + '</span>';
+    html += '<div>';
+    html += '<div style="font-weight:700;font-size:var(--font-md)">' + (typeNameMap[plan.key] || plan.name) + '</div>';
+    html += '<div style="font-size:var(--font-xs);color:var(--text-tertiary)">' + plan.exercises.length + ' 个动作 · 预计 75 分钟</div>';
+    html += '</div></div>';
+
+    // Completion progress
+    if (hasTrainedToday) {
+      var compPct = totalPlannedExercises > 0 ? Math.round((completedExercises / totalPlannedExercises) * 100) : 0;
+      html += '<div style="margin:8px 0">';
+      html += '<div style="display:flex;justify-content:space-between;font-size:var(--font-xs);color:var(--text-secondary);margin-bottom:4px"><span>完成进度</span><span>' + completedExercises + '/' + totalPlannedExercises + ' (' + compPct + '%)</span></div>';
+      html += '<div class="progress-bar-sm" style="height:6px"><div style="width:' + compPct + '%"></div></div>';
+      html += '</div>';
+    }
+
+    // Exercise list
+    html += '<div class="plan-exercise-list" style="margin:8px 0">';
+    html += plan.exercises.map(function(ex, i) {
+      var isDone = hasTrainedToday && completedExercises > 0;
+      return '<span class="plan-ex-tag' + (isDone ? ' done' : '') + '">' + (i + 1) + '. ' + ex.name + ' <span style="color:var(--text-tertiary);font-size:var(--font-xs)">' + ex.sets + '×' + ex.reps + (ex.weight ? ' ' + ex.weight + 'kg' : '') + '</span></span>';
+    }).join('');
+    html += '</div>';
+
+    html += '<button class="btn btn-primary btn-block btn-sm" id="btn-start-plan">▶ 开始训练</button>';
   }
   html += '</div>';
 
-  // Block 2: Tomorrow Preview
-  html += '<div class="card" style="margin-bottom:16px">';
-  html += '<div class="card-header"><span class="card-title">📅 明日预告</span></div>';
+  // ═══════════════════════════════════════
+  // Module 2: 今日饮食
+  // ═══════════════════════════════════════
+  html += '<div class="card" style="margin-bottom:14px;cursor:pointer" id="diet-summary-click">';
+  html += '<div class="card-header"><span class="card-title">🍽️ 今日饮食</span><span style="font-size:var(--font-xs);color:var(--text-secondary)">点击详情 →</span></div>';
+
+  // Protein & calorie progress
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">';
+  // Protein
+  html += '<div>';
+  html += '<div style="display:flex;justify-content:space-between;font-size:var(--font-sm);margin-bottom:4px"><span>🥩 蛋白质</span><span style="font-weight:600">' + protein + '/' + DIET_TARGETS.protein + 'g</span></div>';
+  html += '<div class="progress-bar-sm" style="height:6px"><div style="width:' + pPct + '%"></div></div>';
+  html += '</div>';
+  // Calories
+  html += '<div>';
+  html += '<div style="display:flex;justify-content:space-between;font-size:var(--font-sm);margin-bottom:4px"><span>🔥 热量</span><span style="font-weight:600">' + calories + '/' + DIET_TARGETS.calories + 'kcal</span></div>';
+  html += '<div class="progress-bar-sm" style="height:6px"><div style="width:' + cPct + '%"></div></div>';
+  html += '</div>';
+  html += '</div>';
+
+  // Unfinished diet items
+  if (unfinishedDiet.length > 0) {
+    html += '<div style="font-size:var(--font-xs);color:var(--warning);border-top:1px solid var(--border);padding-top:8px">⚠ 未完成：';
+    html += unfinishedDiet.map(function(item) {
+      return item.icon + ' ' + item.name + ' ' + item.current + '/' + item.target + item.unit;
+    }).join(' · ');
+    html += '</div>';
+  } else if (protein > 0) {
+    html += '<div style="font-size:var(--font-xs);color:var(--success);border-top:1px solid var(--border);padding-top:8px">✅ 今日摄入项目全部达标</div>';
+  }
+
+  html += '</div>';
+
+  // ═══════════════════════════════════════
+  // Module 3: 待打卡
+  // ═══════════════════════════════════════
+  html += '<div class="card" style="margin-bottom:14px">';
+  html += '<div class="card-header"><span class="card-title">📌 待打卡</span></div>';
+  html += '<div class="checkin-links">';
+
+  // Training
+  var trainingDone = hasTrainedToday && (!plan || completedExercises >= totalPlannedExercises);
+  html += '<div class="checkin-link-item" id="cl-training">';
+  html += '<span class="cl-icon">🏋️</span>';
+  html += '<div class="cl-info"><span class="cl-label">训练</span><span class="cl-status" style="color:' + (trainingDone ? 'var(--success)' : (isRest ? 'var(--text-tertiary)' : 'var(--warning)')) + '">' + (trainingDone ? '已完成' : (isRest ? '休息日' : '待打卡')) + '</span></div>';
+  html += '<span class="cl-arrow">→</span>';
+  html += '</div>';
+
+  // Diet
+  var dietDone = pPct >= 90 && cPct >= 90;
+  html += '<div class="checkin-link-item" id="cl-diet">';
+  html += '<span class="cl-icon">🍽️</span>';
+  html += '<div class="cl-info"><span class="cl-label">饮食</span><span class="cl-status" style="color:' + (dietDone ? 'var(--success)' : (protein > 0 ? 'var(--warning)' : 'var(--text-tertiary)')) + '">' + (dietDone ? '已达标' : (protein > 0 ? pPct + '%' : '待打卡')) + '</span></div>';
+  html += '<span class="cl-arrow">→</span>';
+  html += '</div>';
+
+  // Weight
+  var weightDone = !!latest;
+  html += '<div class="checkin-link-item" id="cl-weight">';
+  html += '<span class="cl-icon">⚖️</span>';
+  html += '<div class="cl-info"><span class="cl-label">体重</span><span class="cl-status" style="color:' + (weightDone ? 'var(--success)' : 'var(--text-tertiary)') + '">' + (weightDone ? currentW + 'kg' : '待记录') + '</span></div>';
+  html += '<span class="cl-arrow">→</span>';
+  html += '</div>';
+
+  // Recovery
+  var recoveryDone = recData.sleep && recData.stretch && recData.walk && recData.water;
+  html += '<div class="checkin-link-item" id="cl-recovery">';
+  html += '<span class="cl-icon">🧘</span>';
+  html += '<div class="cl-info"><span class="cl-label">恢复</span><span class="cl-status" style="color:' + (recoveryDone ? 'var(--success)' : (isRest ? 'var(--warning)' : 'var(--text-tertiary)')) + '">' + (recoveryDone ? '已完成' : (Object.keys(recData).length > 0 ? '进行中' : (isRest ? '待打卡' : '—'))) + '</span></div>';
+  html += '<span class="cl-arrow">→</span>';
+  html += '</div>';
+
+  html += '</div></div>';
+
+  // ═══════════════════════════════════════
+  // Block 2: Tomorrow Preview (kept)
+  // ═══════════════════════════════════════
+  html += '<div class="card" style="margin-bottom:14px">';
+  html += '<div class="card-header"><span class="card-title">📮 明日预告</span></div>';
   html += '<div style="font-size:var(--font-sm);color:var(--text-secondary)">明天：' + tomorrow.shiftName + '</div>';
   if (tomorrow.plan === 'rest') {
-    html += '<div style="color:var(--text-tertiary);font-size:var(--font-sm);margin-top:4px">恢复日 💤</div>';
+    html += '<div style="color:var(--text-tertiary);font-size:var(--font-sm);margin-top:4px">恢复日 🌙</div>';
   } else {
     html += '<div style="font-size:var(--font-base);font-weight:600;margin-top:4px">' + (emojiMap[tomorrow.plan] || '') + ' ' + tomorrowPlanName + '</div>';
   }
   html += '</div>';
 
-  // Block 3: Diet Summary
-  html += '<div class="card" style="margin-bottom:16px;cursor:pointer" id="diet-summary-click">';
-  html += '<div class="card-header"><span class="card-title">🍽️ 今日饮食</span><span style="font-size:var(--font-xs);color:var(--text-secondary)">点击详情</span></div>';
-  html += '<div style="display:grid;grid-template-columns:56px 1fr;align-items:center;gap:4px 8px;font-size:var(--font-sm);margin-bottom:8px">';
-  html += '<span>蛋白质</span><span style="font-weight:600">' + protein + '/' + DIET_TARGETS.protein + 'g</span>';
-  html += '<span></span><div class="progress-bar-sm"><div style="width:' + pPct + '%"></div></div>';
-  html += '<span>热量</span><span style="font-weight:600">' + calories + '/' + DIET_TARGETS.calories + 'kcal</span>';
-  html += '<span></span><div class="progress-bar-sm"><div style="width:' + cPct + '%"></div></div>';
-  html += '</div>';
-  if (protein < DIET_TARGETS.protein) {
-    html += '<div style="font-size:var(--font-xs);color:var(--warning);margin-top:4px">还差蛋白质 ' + (DIET_TARGETS.protein - protein) + 'g，建议鸡胸肉200g + 牛奶500ml</div>';
-  }
-  html += '</div>';
-
-  // Block 4: Goal Progress
-  html += '<div class="card" style="margin-bottom:16px">';
-  html += '<div class="card-header"><span class="card-title">🎯 增肌目标</span><button class="btn-ghost" id="btn-weight-modal">记录体重</button></div>';
+  // ═══════════════════════════════════════
+  // Block 4: Goal Progress (kept)
+  // ═══════════════════════════════════════
+  html += '<div class="card" style="margin-bottom:14px">';
+  html += '<div class="card-header"><span class="card-title">🎆 增肌目标</span><button class="btn-ghost" id="btn-weight-modal">记录体重</button></div>';
   html += '<div class="goal-numbers">';
   html += '<div class="goal-num"><span class="goal-val">' + currentW + '</span><span class="goal-unit">kg</span></div>';
   html += '<div class="goal-arrow">→</div>';
   html += '<div class="goal-num"><span class="goal-val">' + targetW + '</span><span class="goal-unit">kg</span></div>';
   html += '</div>';
   html += '<div class="progress-bar-sm" style="height:6px;margin:8px 0"><div style="width:' + progress + '%"></div></div>';
-  html += '<div style="display:flex;justify-content:space-between;font-size:var(--font-xs);color:var(--text-secondary)"><span>进度 ' + progress + '%</span><span>差 ' + (targetW - currentW).toFixed(1) + 'kg</span></div>';
-  if (trend7 !== 0) html += '<div style="font-size:var(--font-xs);color:' + (trend7 > 0 ? 'var(--success)' : 'var(--danger)') + ';margin-top:4px">最近7天 ' + (trend7 > 0 ? '+' : '') + trend7 + 'kg</div>';
+  html += '<div style="display:flex;justify-content:space-between;font-size:var(--font-xs);color:var(--text-secondary)"><span>进度 ' + progress + '%</span><span>差' + (targetW - currentW).toFixed(1) + 'kg</span></div>';
+  if (trend7 !== 0) html += '<div style="font-size:var(--font-xs);color:' + (trend7 > 0 ? 'var(--success)' : 'var(--danger)') + ';margin-top:4px">最近7天' + (trend7 > 0 ? '+' : '') + trend7 + 'kg</div>';
   if (estDate) html += '<div style="font-size:var(--font-xs);color:var(--text-tertiary);margin-top:4px">' + estDate + '</div>';
   html += '</div>';
 
-  // Block 5: Training Stats
+  // ═══════════════════════════════════════
+  // Block 5: Training Stats (kept)
+  // ═══════════════════════════════════════
   html += '<div class="card">';
-  html += '<div class="card-title">📊 训练统计</div>';
+  html += '<div class="card-title">📳 训练统计</div>';
   html += '<div class="stats-row" style="margin-top:10px">';
   html += '<div class="stat-item"><div class="stat-value">' + monthStats.count + '</div><div class="stat-label">本月</div></div>';
   html += '<div class="stat-item"><div class="stat-value">' + totalStats.count + '</div><div class="stat-label">累计</div></div>';
@@ -158,9 +277,27 @@ async function renderBlocks() {
     await saveRecoveryRecord({
       sleep: document.getElementById('rec-sleep').checked,
       stretch: document.getElementById('rec-stretch').checked,
-      walk: document.getElementById('rec-walk').checked
+      walk: document.getElementById('rec-walk').checked,
+      water: document.getElementById('rec-water').checked
     });
     showToast('已保存');
+    renderBlocks();
+  });
+
+  // 待打卡 navigation bindings
+  var clTraining = document.getElementById('cl-training');
+  if (clTraining) clTraining.addEventListener('click', function() { navigate('checkin'); });
+
+  var clDiet = document.getElementById('cl-diet');
+  if (clDiet) clDiet.addEventListener('click', function() { navigate('diet'); });
+
+  var clWeight = document.getElementById('cl-weight');
+  if (clWeight) clWeight.addEventListener('click', openWeightModal);
+
+  var clRecovery = document.getElementById('cl-recovery');
+  if (clRecovery) clRecovery.addEventListener('click', function() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    showToast('请在今日任务中打卡恢复项目');
   });
 }
 
