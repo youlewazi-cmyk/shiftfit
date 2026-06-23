@@ -11,15 +11,67 @@ export async function renderCheckin() { try {
     const exercises = JSON.parse(preset);
     const allEx = await getAllExercises();
     const resolved = exercises.map(e => {
-      const name = typeof e === 'string' ? e : e.name;
+     const name =
+typeof e === 'string'
+? e
+: (
+e.name ||
+e.exercise ||
+e.exerciseName ||
+''
+);
       const found = allEx.find(a => a.name === name);
       return {
         exerciseId: found ? found.id : null,
         exerciseName: name,
         category: found ? found.category : 'other',
-        targetSets: typeof e === 'object' ? e.sets : 4,
-        targetReps: typeof e === 'object' ? e.reps : 8,
-        targetWeight: typeof e === 'object' ? (e.weight || 0) : 0
+        targetSets:
+
+typeof e === 'object'
+
+? (
+
+e.targetSets ||
+
+e.sets ||
+
+4
+
+)
+
+:4,
+
+targetReps:
+
+typeof e === 'object'
+
+? (
+
+e.targetReps ||
+
+e.reps ||
+
+8
+
+)
+
+:8,
+
+targetWeight:
+
+typeof e === 'object'
+
+? (
+
+e.targetWeight ||
+
+e.weight ||
+
+0
+
+)
+
+:0
       };
     });
     startWorkoutSession(resolved);
