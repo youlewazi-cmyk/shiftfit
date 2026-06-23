@@ -171,10 +171,43 @@ html += '</div>';html += '<button class="btn btn-primary btn-block btn-sm" id="b
 
   // Event bindings
   var btn = document.getElementById('btn-start-plan');
-  if (btn) btn.addEventListener('click', function() {
-    sessionStorage.setItem('workoutPreset', JSON.stringify(plan.exercises));
-    navigate('checkin');
-  });
+  if (btn) btn.addEventListener('click', function(){
+
+const currentWorkout = {
+
+date:today(),
+
+shift:info.shiftName,
+
+trainingType:info.plan,
+
+status:'training',
+
+startedAt:Date.now(),
+
+exercises:plan.exercises.map(ex=>({
+
+...ex,
+
+done:false,
+
+records:[]
+
+}))
+
+};
+
+sessionStorage.setItem(
+
+'currentWorkout',
+
+JSON.stringify(currentWorkout)
+
+);
+
+navigate('checkin');
+
+});
 
   var ds = document.getElementById('diet-summary-click');
   if (ds) ds.addEventListener('click', function() { navigate('diet'); });
